@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^5.3.7",
+    "@clerk/nextjs": "^5.4.1",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@google/generative-ai": "^0.17.0",
@@ -17,8 +17,10 @@
     "@stripe/stripe-js": "^4.4.0",
     "firebase": "^10.13.1",
     "next": "14.2.5",
+    "openai": "^4.57.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "stripe": "^16.9.0"
   },
   "devDependencies": {
     "eslint": "^8",
