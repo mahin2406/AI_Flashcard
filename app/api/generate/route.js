@@ -1,35 +1,33 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import Stripe from 'stripe'
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const systemPrompt = `
-You are a versatile flashcard creator. Given a topic, number of cards, question type, answer type, and specific details, you will generate a set of flashcards. You can adapt to various subject matters and learning styles.
+You are a flashcard creator. Generate concise and effective flashcards from the provided text. 12 flashcards are required.
+Format output as JSON: [{ "question": "...", "answer": "..." }]
+`;
 
-Return in the following JSON format
-{
-    "flashcards":{
-        "front": str,
-        "back": str
-    }
-}
-`
 export async function POST(req) {
-    const openai = new OpenAI()
-    const data = await req.text()
-  
-    
-    const completion = await openai.chat.completions.create({
-        messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: data },
-        ],
-        model: 'gpt-4o',
-        response_format: { type: 'json_object' },
-    })
+  try {
+    const { topic } = await req.json();
+    const prompt = `${systemPrompt} Topic: ${topic}`;
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(prompt);
+    let text = result.response.text();
 
-    // Parse the JSON response from the OpenAI API
-    const flashcards = JSON.parse(completion.choices[0].message.content)
+    text = text.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+    let flashcards = JSON.parse(text.trim());
+    if (!Array.isArray(flashcards)) {
+      throw new Error("Generated content is not in the expected array format");
+    }
 
-    // Return the flashcards as a JSON response
-    return NextResponse.json(flashcards.flashcards)
+    return NextResponse.json(flashcards);
+  } catch (error) {
+    console.error("Error generating flashcards:", error);
+    return NextResponse.json(
+      { error: "Failed to generate flashcards" },
+      { status: 500 }
+    );
   }
+}
