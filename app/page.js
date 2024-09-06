@@ -31,7 +31,11 @@ export default function Home() {
         <Typography variant="h5">
           The easiest way to make a flashcard from your text
         </Typography>
+        <Button variant="contained" color="primary" sx={{mt:2}}>
+          Get Started
+        </Button>
       </Box>
+      
     </Container>
   )
 }
