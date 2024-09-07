@@ -102,7 +102,7 @@ export default function Home() {
         </Container>
 
         <Box sx={{ bgcolor: '#121212', color: '#e0e0e0', p: 3, textAlign: 'center' }}>
-          <Typography variant="body2">© 2024 Varshith Krishna. All rights reserved.</Typography>
+          <Typography variant="body2">© 2024 Mahin Patel. All rights reserved.</Typography>
         </Box>
       </Box>
     </>
