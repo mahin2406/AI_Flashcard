@@ -23,7 +23,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
-    "stripe": "^16.9.0"
+    "stripe": "^16.10.0"
   },
   "devDependencies": {
     "eslint": "^8",
