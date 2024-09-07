@@ -6,12 +6,11 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getFirestore, writeBatch, doc, collection, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
-import { color } from "framer-motion";
 
 export default function Generate() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [flashcards, setFlashcards] = useState([]);
-  const [flipped, setFlipped] = useState([]);
+  const [flipped, setFlipped] = useState({});
   const [text, setText] = useState('');
   const [name, setName] = useState('');
   const [open, setOpen] = useState(false);
@@ -31,26 +30,12 @@ export default function Generate() {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const contentType = res.headers.get('Content-Type');
-      let data;
-
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        const textResponse = await res.text();
-        try {
-          const jsonString = textResponse.match(/\[.*\]/s);
-          if (jsonString) {
-            data = JSON.parse(jsonString[0]);
-          } else {
-            data = [{ question: "Error", answer: "Invalid response format." }];
-          }
-        } catch (error) {
-          console.error('Error parsing response:', error);
-          data = [{ question: "Error", answer: "Invalid response format." }];
-        }
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
 
+      const data = await res.json();
+      
       if (Array.isArray(data) && data.every(item => item.question && item.answer)) {
         setFlashcards(data);
       } else {
@@ -128,35 +113,34 @@ export default function Generate() {
             sx={{ mb: 2, input: { color: '#fff' }, textarea: { color: '#fff' }, bgcolor: '#444' }}
           />
           <Button
-  variant="contained"
-  color="primary"
-  onClick={handleSubmit}
-  sx={{
-    backgroundColor: '#ff6f61',
-    '&:hover': { backgroundColor: '#ff3b2a' },
-    position: 'relative',
-    overflow: 'hidden',
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      width: '100%',
-      height: '2px',
-      backgroundColor: '#fff',
-      transform: 'scaleX(0)',
-      transformOrigin: 'bottom right',
-      transition: 'transform 0.3s ease-out',
-    },
-    '&:hover::after': {
-      transform: 'scaleX(1)',
-      transformOrigin: 'bottom left',
-    },
-  }}
->
-  Generate Flashcards
-</Button>
-
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            sx={{
+              backgroundColor: '#ff6f61',
+              '&:hover': { backgroundColor: '#ff3b2a' },
+              position: 'relative',
+              overflow: 'hidden',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                height: '2px',
+                backgroundColor: '#fff',
+                transform: 'scaleX(0)',
+                transformOrigin: 'bottom right',
+                transition: 'transform 0.3s ease-out',
+              },
+              '&:hover::after': {
+                transform: 'scaleX(1)',
+                transformOrigin: 'bottom left',
+              },
+            }}
+          >
+            Generate Flashcards
+          </Button>
         </Paper>
       </Box>
 

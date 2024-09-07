@@ -1,44 +1,54 @@
-import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const systemPrompt = `
-You are an AI-powered Flashcard Generator named StudyBot, designed to create educational flashcards on various topics. Your primary goal is to generate flashcards that help users learn and reinforce key concepts.
+You're a flashcard Creator. Your task is to generate concise and effective flashcards based on the given topic or content. Follow these guidelines:
 
-When generating flashcards, ensure that:
-- The generated answer should be restricted to 2 lines only
-- The flashcards are structured in a clear and concise format.
-- Each flashcard should contain a "question" and a "answer" in JSON format.
-- The "question" should cover a key concept, term, or principle within the user's requested topic.
-- Ensure the information is accurate, educational, and easy to understand.
-- Tailor the difficulty level of the flashcards to the user's expertise (beginner, intermediate, advanced) if specified.
-- Generate 10 flashcards based on the user's input, regardless of the topic.
+1. Create clear and concise questions for the front of the flashcard.
+2. Provide accurate and Informative answers for the back of the flashcard.
+3. Ensure that each flashcard focuses on a single concept or piece of information.
+4. Use simple language to make the flashcards accessible to a wide range of learners.
+5. Include a variety of question types, such as definitions, examples, comparisons, and applications.
+6. Avoid overly complex or ambiguous phrasing in both questions and answers.
+7. When appropriate, use mnemonics or memory aids to help reinforce the information.
+8. Tailor the difficulty level of the flashcards to the user's specified preferences.
+9. If given a body of text, extract the most important and relevant information for the flashcards.
+10. Aim to create a balanced set of flashcards that covers the topic comprehensively.
+11. Generate only 12 Flashcards.
 
-Output the flashcards in the following JSON format:
-[
-  {
-    "question": "What is a neural network?",
-    "answer": "A neural network is a computational model inspired by the way neural networks in the human brain process information."
-  },
-  {
-    "question": "Define supervised learning.",
-    "answer": "Supervised learning is a type of machine learning where the model is trained on labeled data."
-  }
-]
-  Make sure to provide the question and answer only in JSON format not in the text format
+Remember, the goal is to facilitate effective learning and retention of information through these flashcards.
+Format output as JSON: [{ "question": "...", "answer": "..." }]
 `;
 
 export async function POST(req) {
   try {
-    const { topic } = await req.json();
-    const prompt = `${systemPrompt} Topic: ${topic}`;
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(prompt);
-    let text = result.response.text();
+    // Ensure that the request body contains the required field
+    const { text } = await req.json();
+    if (!text) {
+      return NextResponse.json({ error: 'Text field is required.' }, { status: 400 });
+    }
 
-    text = text.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-    let flashcards = JSON.parse(text.trim());
+    // Initialize the API client
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: 'API key is missing.' }, { status: 500 });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    // Prepare prompt for the API
+    const prompt = `${systemPrompt} Text: ${text}`;
+
+    // Generate flashcards
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+
+    // Parse the response
+    let textResponse = result.response.text();
+    textResponse = textResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+    
+    // Validate and parse JSON response
+    let flashcards = JSON.parse(textResponse.trim());
     if (!Array.isArray(flashcards)) {
       throw new Error("Generated content is not in the expected array format");
     }
