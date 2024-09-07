@@ -21,6 +21,7 @@
     "openai": "^4.57.1",
     "react": "^18",
     "react-dom": "^18",
+    "react-hot-toast": "^2.4.1",
     "stripe": "^16.9.0"
   },
   "devDependencies": {
