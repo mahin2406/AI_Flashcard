@@ -10,13 +10,13 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Flashcard</title>
+        <title>EasyLearning</title>
         <meta name="description" content="Create flashcard from your text" />
       </Head>
 
       <AppBar position="fixed" sx={{ backgroundColor: "#1f1f1f", width: "100%", borderBottom: "2px solid #444" }}>
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: "#e0e0e0" }}>Flashcard SaaS</Typography>
+          <Typography variant="h6" sx={{ flexGrow: 1, color: "#e0e0e0" }}>EasyLearning</Typography>
           <SignedOut>
             <Button color="inherit" href="sign-in">Login</Button>
             <Button color="inherit" href="sign-up">Sign Up</Button>
@@ -29,7 +29,7 @@ export default function Home() {
         <Container maxWidth="lg" sx={{ flexGrow: 1 }}>
           <Box sx={{ textAlign: "center", my: 9 }}>
             <Typography variant="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
-              Welcome to Flashcard SaaS
+              Welcome to EasyLearning
             </Typography>
             <Typography variant="h5" sx={{ mb: 4 }}>
               The easiest way to make flashcards from your text
