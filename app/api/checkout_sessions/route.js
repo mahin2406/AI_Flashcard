@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
+
+// Ensure that process.env.STRIPE_SECRET_KEY is correctly set
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2022-11-15',
-})
+});
 
 const formatAmountForStripe = (amount, currency) => {
     return Math.round(amount * 100)
