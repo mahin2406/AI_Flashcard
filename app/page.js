@@ -11,7 +11,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [isClient, setIsClient] = useState(false);
   const { isSignedIn } = useAuth(); // Get authentication status
-  const { openSignIn } = useClerk(); // Sign-in method from Clerk
+  const { openSignIn, openSignUp } = useClerk(); // Sign-in and sign-up methods from Clerk
   const router = useRouter(); // For navigation
 
   useEffect(() => {
@@ -19,16 +19,25 @@ export default function Home() {
   }, []);
 
   // Handle "Get Started" button click
+  const handleGetStarted = () => {
+    if (isSignedIn) {
+      router.push('/generate'); // Redirect to the "generate" page if signed in
+    } else {
+      openSignIn(); // Open sign-in if the user is not signed in
+    }
+  };
+
+  // Handle checkout process for Pro subscription
   const handleCheckout = async (plan) => {
     if (!isSignedIn) {
-      // Open the sign-in modal if the user is not signed in
+      // Open sign-in modal if the user is not signed in
       openSignIn({
         afterSignInUrl: '/', // Redirect back to home after sign-in (optional)
         afterSignInUrl: () => handleCheckout(plan), // Retry the checkout process once signed in
       });
       return; // Stop here until the user is signed in
     }
-  
+
     try {
       const response = await fetch('/api/checkout_sessions', {
         method: 'POST',
@@ -37,11 +46,11 @@ export default function Home() {
         },
         body: JSON.stringify({ plan }), // Send the selected plan type (e.g., 'pro')
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to initiate checkout. Please try again.');
       }
-  
+
       const { sessionId } = await response.json();
       const stripe = await getStripe(); // Get Stripe instance
       await stripe.redirectToCheckout({ sessionId });
@@ -50,7 +59,6 @@ export default function Home() {
       alert(error.message);
     }
   };
-  
 
   return (
     <>
@@ -63,8 +71,8 @@ export default function Home() {
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1, color: "#e0e0e0" }}>EasyLearning</Typography>
           <SignedOut>
-            <Button color="inherit" onClick={openSignIn}>Login</Button>
-            <Button color="inherit" onClick={openSignIn}>Sign Up</Button>
+            <Button color="inherit" onClick={() => openSignIn()}>Login</Button>
+            <Button color="inherit" onClick={() => openSignUp()}>Sign Up</Button>
           </SignedOut>
           <SignedIn><UserButton /></SignedIn>
         </Toolbar>
@@ -155,7 +163,7 @@ export default function Home() {
                     variant="contained"
                     color="primary"
                     sx={{ mt: 2, backgroundColor: '#ff6f61', '&:hover': { backgroundColor: '#ff3b2a' } }}
-                    onClick={handleCheckout.bind(null, 'pro')}
+                    onClick={handleCheckout.bind(null, 'pro')} // Handle checkout
                   >
                     Choose Pro
                   </Button>
