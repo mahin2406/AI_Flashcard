@@ -19,19 +19,13 @@ export default function Home() {
   }, []);
 
   // Handle "Get Started" button click
-  const handleGetStarted = () => {
-    if (isSignedIn) {
-      router.push('/generate'); // Redirect to the "generate" page if signed in
-    } else {
-      openSignIn(); // Open sign-in if the user is not signed in
-    }
-  };
-
-  // Handle checkout process for Pro subscription
   const handleCheckout = async (plan) => {
     if (!isSignedIn) {
-      // Open sign-in modal if the user is not signed in
-      openSignIn();
+      // Open the sign-in modal if the user is not signed in
+      openSignIn({
+        afterSignInUrl: '/', // Redirect back to home after sign-in (optional)
+        afterSignInUrl: () => handleCheckout(plan), // Retry the checkout process once signed in
+      });
       return; // Stop here until the user is signed in
     }
   
@@ -41,7 +35,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ plan }), // Send plan type (e.g., 'pro')
+        body: JSON.stringify({ plan }), // Send the selected plan type (e.g., 'pro')
       });
   
       if (!response.ok) {
@@ -50,13 +44,13 @@ export default function Home() {
   
       const { sessionId } = await response.json();
       const stripe = await getStripe(); // Get Stripe instance
-  
       await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
       console.error('Error during checkout:', error);
       alert(error.message);
     }
   };
+  
 
   return (
     <>
