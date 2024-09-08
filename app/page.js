@@ -29,6 +29,12 @@ export default function Home() {
 
   // Handle checkout process for Pro subscription
   const handleCheckout = async (plan) => {
+    if (!isSignedIn) {
+      // Open sign-in modal if the user is not signed in
+      openSignIn();
+      return; // Stop here until the user is signed in
+    }
+  
     try {
       const response = await fetch('/api/checkout_sessions', {
         method: 'POST',
@@ -37,13 +43,14 @@ export default function Home() {
         },
         body: JSON.stringify({ plan }), // Send plan type (e.g., 'pro')
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to initiate checkout. Please try again.');
       }
-
+  
       const { sessionId } = await response.json();
       const stripe = await getStripe(); // Get Stripe instance
+  
       await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
       console.error('Error during checkout:', error);
