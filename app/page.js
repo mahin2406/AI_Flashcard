@@ -1,61 +1,53 @@
 'use client';
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import getStripe from "@/utils/get-stripe";
 import { useAuth, useClerk, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Head from "next/head";
 import { useRouter } from "next/navigation";
-import { Container, Button, Toolbar, Typography, AppBar, Box, Grid } from "@mui/material";
+import { Container, Button, Toolbar, Typography, AppBar, Box, Grid, Paper, Slide, Zoom, Fade } from "@mui/material";
+import "@fontsource/poppins"; // Importing the 'Poppins' font
 
 export default function Home() {
-  const [error, setError] = useState('');
   const [isClient, setIsClient] = useState(false);
-  const { isSignedIn } = useAuth(); // Get authentication status
-  const { openSignIn, openSignUp } = useClerk(); // Sign-in and sign-up methods from Clerk
-  const router = useRouter(); // For navigation
+  const { isSignedIn } = useAuth();
+  const { openSignIn, openSignUp } = useClerk();
+  const router = useRouter();
 
   useEffect(() => {
-    setIsClient(true); // Ensure this runs client-side only
+    setIsClient(true);
   }, []);
 
-  // Handle "Get Started" button click
   const handleGetStarted = () => {
     if (isSignedIn) {
-      router.push('/generate'); // Redirect to the "generate" page if signed in
+      router.push('/generate');
     } else {
-      openSignIn(); // Open sign-in if the user is not signed in
+      openSignIn();
     }
   };
 
-  // Handle checkout process for Pro subscription
   const handleCheckout = async (plan) => {
     if (!isSignedIn) {
-      // Open sign-in modal if the user is not signed in
       openSignIn({
-        afterSignInUrl: '/', // Redirect back to home after sign-in (optional)
-        afterSignInUrl: () => handleCheckout(plan), // Retry the checkout process once signed in
+        afterSignInUrl: () => handleCheckout(plan),
       });
-      return; // Stop here until the user is signed in
+      return;
     }
 
     try {
       const response = await fetch('/api/checkout_sessions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ plan }), // Send the selected plan type (e.g., 'pro')
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to initiate checkout. Please try again.');
+        throw new Error('Failed to initiate checkout.');
       }
 
       const { sessionId } = await response.json();
-      const stripe = await getStripe(); // Get Stripe instance
+      const stripe = await getStripe();
       await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
-      console.error('Error during checkout:', error);
       alert(error.message);
     }
   };
@@ -64,119 +56,282 @@ export default function Home() {
     <>
       <Head>
         <title>EasyLearning</title>
-        <meta name="description" content="Create flashcard from your text" />
+        <meta name="description" content="Create flashcards from your text" />
       </Head>
 
-      <AppBar position="fixed" sx={{ backgroundColor: "#1f1f1f", width: "100%", borderBottom: "2px solid #444" }}>
+      <AppBar position="fixed" sx={{ backgroundColor: "#292929", borderBottom: "3px solid #ff7043" }}>
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: "#e0e0e0" }}>EasyLearning</Typography>
+          <Typography
+            variant="h5"
+            sx={{
+              flexGrow: 1,
+              color: "#ff7043",
+              fontFamily: "'Montserrat', sans-serif",
+              fontWeight: '700',
+              fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem' },
+              letterSpacing: '0.1rem',
+              textTransform: 'uppercase',
+              transition: "color 0.3s",
+              "&:hover": {
+                color: "#ff5722",
+              },
+            }}
+          >
+            EasyLearning
+          </Typography>
           <SignedOut>
-            <Button color="inherit" onClick={() => openSignIn()}>Login</Button>
-            <Button color="inherit" onClick={() => openSignUp()}>Sign Up</Button>
+            <Button color="inherit" sx={{ color: "#ff7043", mr: 1 }} onClick={openSignIn}>
+              Login
+            </Button>
+            <Button color="inherit" sx={{ backgroundColor: "#ff7043", color: "#fff" }} onClick={openSignUp}>
+              Sign Up
+            </Button>
           </SignedOut>
-          <SignedIn><UserButton /></SignedIn>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#121212', color: '#e0e0e0', pt: 10 }}>
+      {/* Main content section */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          bgcolor: '#f5f5f5',
+          color: '#333',
+          pt: 10,
+          textAlign: "center",
+        }}
+      >
         <Container maxWidth="lg" sx={{ flexGrow: 1 }}>
-          <Box sx={{ textAlign: "center", my: 9 }}>
-            <Typography variant="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
-              Welcome to EasyLearning
-            </Typography>
-            <Typography variant="h5" sx={{ mb: 4 }}>
-              The easiest way to make flashcards from your text
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ mt: 2, backgroundColor: '#ff6f61', '&:hover': { backgroundColor: '#ff3b2a' } }}
-              onClick={handleGetStarted} // Add handler for "Get Started"
-            >
-              Get Started
-            </Button>
-          </Box>
+          <Zoom in timeout={1000}>
+            <Box sx={{ textAlign: "center", my: { xs: 4, sm: 6, md: 9 } }}>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: '700',
+                  mb: 2,
+                  color: "#ff7043",
+                  fontFamily: "'Poppins', sans-serif",
+                  letterSpacing: '0.1rem',
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
+                }}
+              >
+                Welcome to EasyLearning
+              </Typography>
+              <Typography variant="h6" sx={{ mb: 4, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' } }}>
+                Your Smartest Way to Create Flashcards from Text
+              </Typography>
+              <Button
+                variant="contained"
+                sx={{
+                  mt: 2,
+                  py: 1.5,
+                  px: 3,
+                  backgroundColor: '#ff7043',
+                  color: '#fff',
+                  fontWeight: '600',
+                  letterSpacing: '0.05rem',
+                  '&:hover': {
+                    backgroundColor: '#ff5722',
+                  },
+                }}
+                onClick={handleGetStarted}
+              >
+                Get Started
+              </Button>
+            </Box>
+          </Zoom>
 
-          <Box sx={{ my: 6, textAlign: "center" }}>
-            <Typography variant="h4" component="h2" sx={{ mb: 4 }}>
-              Features
-            </Typography>
-            <Grid container spacing={6}>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ border: "2px solid #444", borderRadius: 2, padding: 3, bgcolor: '#1e1e1e' }}>
-                  <Typography variant="h6" gutterBottom>Easy Text Input</Typography>
-                  <Typography>Simply input your text and let our software do the rest.</Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <Box sx={{ border: "2px solid #444", borderRadius: 2, padding: 3, bgcolor: '#1e1e1e' }}>
-                  <Typography variant="h6" gutterBottom>Accessible Anywhere</Typography>
-                  <Typography>Access your flashcards from any device, at any time.</Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <Box sx={{ border: "2px solid #444", borderRadius: 2, padding: 3, bgcolor: '#1e1e1e' }}>
-                  <Typography variant="h6" gutterBottom>Smart Flashcards</Typography>
-                  <Typography>Our AI intelligently breaks down your text into concise flashcards, perfect for studying.</Typography>
-                </Box>
-              </Grid>
+          {/* Features section */}
+          <Grid container spacing={4}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Slide direction="up" in timeout={700}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    padding: 4,
+                    textAlign: 'center',
+                    backgroundColor: "#fff",
+                    borderRadius: 3,
+                    transition: 'transform 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                    },
+                  }}
+                >
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Easy Text Input
+                  </Typography>
+                  <Typography>
+                    Enter text, and we'll generate flashcards effortlessly.
+                  </Typography>
+                </Paper>
+              </Slide>
             </Grid>
-          </Box>
 
+            <Grid item xs={12} sm={6} md={4}>
+              <Slide direction="up" in timeout={800}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    padding: 4,
+                    textAlign: 'center',
+                    backgroundColor: "#fff",
+                    borderRadius: 3,
+                    transition: 'transform 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                    },
+                  }}
+                >
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Accessible Anywhere
+                  </Typography>
+                  <Typography>
+                    Access your flashcards on any device, anywhere.
+                  </Typography>
+                </Paper>
+              </Slide>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Slide direction="up" in timeout={900}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    padding: 4,
+                    textAlign: 'center',
+                    backgroundColor: "#fff",
+                    borderRadius: 3,
+                    transition: 'transform 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                    },
+                  }}
+                >
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Smart Flashcards
+                  </Typography>
+                  <Typography>
+                    AI-powered flashcards optimized for learning efficiency.
+                  </Typography>
+                </Paper>
+              </Slide>
+            </Grid>
+          </Grid>
+
+          {/* Pricing section */}
           <Box sx={{ my: 6, textAlign: "center" }}>
-            <Typography variant="h4" gutterBottom>Pricing</Typography>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#ff7043', letterSpacing: '0.1rem', fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
+              Pricing Plans
+            </Typography>
             <Grid container spacing={6}>
-              <Grid item xs={12} md={6}>
-                <Box sx={{
-                  p: 3,
-                  border: "2px solid #444",
-                  borderRadius: 2,
-                  bgcolor: '#1e1e1e'
-                }}>
-                  <Typography variant="h6" gutterBottom>Basic</Typography>
-                  <Typography variant="h5" gutterBottom>Free</Typography>
-                  <Typography gutterBottom>Access to basic flashcard features and limited storage.</Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ mt: 2, backgroundColor: '#ff6f61', '&:hover': { backgroundColor: '#ff3b2a' } }}
-                    onClick={handleGetStarted} // Redirect to generate or sign in
+              <Grid item xs={12} sm={6} md={6}>
+                <Fade in timeout={800}>
+                  <Box
+                    sx={{
+                      p: 4,
+                      border: "2px solid #ff7043",
+                      borderRadius: 4,
+                      backgroundColor: '#fff',
+                      textAlign: 'center',
+                      transition: 'transform 0.3s',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                      },
+                    }}
                   >
-                    Choose Basic
-                  </Button>
-                </Box>
+                    <Typography variant="h6" gutterBottom>
+                      Basic Plan
+                    </Typography>
+                    <Typography variant="h5" gutterBottom>
+                      Free
+                    </Typography>
+                    <Typography>
+                      Access limited features and storage.
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      sx={{
+                        mt: 2,
+                        color: "#ff7043",
+                        borderColor: "#ff7043",
+                        '&:hover': {
+                          backgroundColor: '#ffe5db',
+                        },
+                      }}
+                      onClick={handleGetStarted}
+                    >
+                      Choose Basic
+                    </Button>
+                  </Box>
+                </Fade>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <Box sx={{
-                  p: 3,
-                  border: "2px solid #444",
-                  borderRadius: 2,
-                  bgcolor: '#1e1e1e'
-                }}>
-                  <Typography variant="h6" gutterBottom>Pro</Typography>
-                  <Typography variant="h5" gutterBottom>$10 / month</Typography>
-                  <Typography gutterBottom>Access to unlimited flashcard features and storage.</Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ mt: 2, backgroundColor: '#ff6f61', '&:hover': { backgroundColor: '#ff3b2a' } }}
-                    onClick={handleCheckout.bind(null, 'pro')} // Handle checkout
+              <Grid item xs={12} sm={6} md={6}>
+                <Fade in timeout={900}>
+                  <Box
+                    sx={{
+                      p: 4,
+                      border: "2px solid #ff7043",
+                      borderRadius: 4,
+                      backgroundColor: '#fff',
+                      textAlign: 'center',
+                      transition: 'transform 0.3s',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                      },
+                    }}
                   >
-                    Choose Pro
-                  </Button>
-                </Box>
+                    <Typography variant="h6" gutterBottom>
+                      Pro Plan
+                    </Typography>
+                    <Typography variant="h5" gutterBottom>
+                      $10 / month
+                    </Typography>
+                    <Typography>
+                      Enjoy unlimited features and storage.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        mt: 2,
+                        backgroundColor: '#ff7043',
+                        color: '#fff',
+                        '&:hover': {
+                          backgroundColor: '#ff5722',
+                        },
+                      }}
+                      onClick={() => handleCheckout('pro')}
+                    >
+                      Choose Pro
+                    </Button>
+                  </Box>
+                </Fade>
               </Grid>
             </Grid>
           </Box>
         </Container>
-
-        <Box sx={{ bgcolor: '#121212', color: '#e0e0e0', p: 3, textAlign: 'center' }}>
-          <Typography variant="body2">© 2024 Mahin Patel. All rights reserved.</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            p: 4,
+            backgroundColor: '#292929',
+            color: '#fff',
+            borderTop: '3px solid #ff7043',
+          }}
+        >
+          <Typography variant="body2" sx={{ color: '#ccc' }}>
+            © 2024 EasyLearning. All rights reserved.
+          </Typography>
         </Box>
-      </Box>
+      </Box> {/* Closing the main container Box */}
+
     </>
-  );
-}
+  ); // Ending the return of JSX
+} // Ending the Home component function
