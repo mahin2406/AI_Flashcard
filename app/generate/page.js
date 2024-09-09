@@ -359,9 +359,10 @@ export default function Generate() {
                               gap: 1,
                             }}
                           >
-                            <IconButton onClick={() => handleEditClick(index)}>
+                            {/* Comment out or remove this line to hide the EditIcon */}
+                            {/* <IconButton onClick={() => handleEditClick(index)}>
                               <EditIcon />
-                            </IconButton>
+                            </IconButton> */}
                             <IconButton onClick={() => handleDelete(index)}>
                               <DeleteIcon />
                             </IconButton>
@@ -371,6 +372,7 @@ export default function Generate() {
                     </CardContent>
                   </CardActionArea>
                 </Card>
+
               </Grid>
             ))}
           </Grid>
