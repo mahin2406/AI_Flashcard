@@ -15,7 +15,7 @@ import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { collection, doc, getDoc, setDoc, CollectionReference } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
 
 export default function Flashcard() {
@@ -24,35 +24,30 @@ export default function Flashcard() {
   const [flipped, setFlipped] = useState([]);
 
   const searchParams = useSearchParams();
-  const search = searchParams.get("id");
+  const search = searchParams.get('id');
   const router = useRouter();
 
   useEffect(() => {
-    async function getFlashcards() {
-      if (!user || !search) return;
-
-      // Reference to the specific document containing flashcards
-      const docRef = doc(collection(db, "users"), user.id);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        const flashcardsData = userData.flashcards || [];
-        
-        // Find the specific flashcards set by the ID
-        const flashcardsSet = flashcardsData.find(set => set.id === search);
-        setFlashcards(flashcardsSet ? flashcardsSet.cards : []);
-      }
+    async function getFlashcard() {
+      if (!search || !user) return
+  
+      const colRef = collection(doc(collection(db, 'users'), user.id), search)
+      const docs = await getDocs(colRef)
+      const flashcards = []
+      docs.forEach((doc) => {
+        flashcards.push({ id: doc.id, ...doc.data() })
+      })
+      setFlashcards(flashcards)
     }
-    getFlashcards();
-  }, [user, search]);
+    getFlashcard()
+  }, [search, user])
 
   const handleCardClick = (id) => {
     setFlipped((prev) => ({
       ...prev,
       [id]: !prev[id],
-    }));
-  };
+    }))
+  }
 
   const handleHome = () => {
     router.push("./");
@@ -85,7 +80,7 @@ export default function Flashcard() {
               variant="h6"
               sx={{ flexGrow: 1, fontFamily: "cursive" }}
             >
-              GPA Rescuer
+              EasyLearning
             </Typography>
             <Button color="inherit" onClick={handleHome}>
               <Typography

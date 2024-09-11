@@ -113,7 +113,7 @@ export default function FlashcardsPage() {
                 variant="h6"
                 sx={{ flexGrow: 1, color: "white", fontFamily: "cursive" }}
               >
-                GPA Rescuer
+                EasyLearning
               </Typography>
             </Button>
             <Box sx={{ flexGrow: 1 }} /> {/* Spacer */}
