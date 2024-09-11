@@ -15,7 +15,7 @@ import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { collection, doc, getDoc } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc, CollectionReference } from "firebase/firestore";
 import { db } from "@/firebase";
 
 export default function Flashcard() {

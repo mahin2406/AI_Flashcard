@@ -2,41 +2,48 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppBar, Container, Toolbar, Button, Typography, Grid, Card, CardActionArea, CardContent, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Box } from "@mui/material";
-import { SignOutButton, useUser, useClerk } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { collection, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import RemoveCircleTwoToneIcon from "@mui/icons-material/RemoveCircleTwoTone";
 
-export default function Flashcards() {
-  const { isLoaded, isSignedIn, user } = useUser();
-  const [flashcardCollections, setFlashcardCollections] = useState([]);
+export default function FlashcardsPage() {
+  const [collections, setCollections] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const router = useRouter();
-  const clerk = useClerk(); // Access Clerk client
+  const { userId } = useAuth(); // Get user ID from authentication service
 
   useEffect(() => {
-    async function getFlashcards() {
-      if (!user) return;
+    const fetchCollections = async () => {
+      try {
+        if (!userId) {
+          console.error('User not authenticated');
+          return;
+        }
 
-      const userDocRef = doc(collection(db, "users"), user.id);
-      const docSnap = await getDoc(userDocRef);
-      if (docSnap.exists()) {
-        const collections = docSnap.data().flashcards || [];
-        setFlashcardCollections(collections);
-      } else {
-        await setDoc(userDocRef, { flashcards: [] });
+        const userDocRef = doc(db, 'users', userId); // Get user document reference
+        const userSnap = await getDoc(userDocRef);
+
+        if (userSnap.exists()) {
+          const flashcardCollections = userSnap.data().flashcards || [];
+          setCollections(flashcardCollections);
+        } else {
+          await setDoc(userDocRef, { flashcards: [] });
+        }
+      } catch (error) {
+        console.error('Error fetching flashcard collections:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-    getFlashcards();
-  }, [user]);
+    };
 
-  if (!isLoaded || !isSignedIn) {
-    return <Typography>Loading...</Typography>;
-  }
+    fetchCollections();
+  }, [userId]);
 
   const handleCardClick = (id) => {
-    router.push(`/flashcard?id=${id}`);
+    router.push(`/flashcards/${id}`);
   };
 
   const handleBack = () => {
@@ -63,27 +70,27 @@ export default function Flashcards() {
   };
 
   const handleDeleteCollection = async () => {
-    if (!user || !selectedCollection) return;
+    if (!userId || !selectedCollection || !selectedCollection.id) return;
 
-    const userDocRef = doc(collection(db, "users"), user.id);
+    const userDocRef = doc(db, "users", userId);
+    const collectionRef = collection(userDocRef, "flashcards");
+    const docRef = doc(collectionRef, selectedCollection.id);
 
     try {
-      const docSnap = await getDoc(userDocRef);
-      if (docSnap.exists()) {
-        const collections = docSnap.data().flashcards || [];
-        const updatedCollections = collections.filter(
-          (collection) => collection.name !== selectedCollection.name
-        );
-        await setDoc(userDocRef, { flashcards: updatedCollections });
-        setFlashcardCollections(updatedCollections);
-      }
-    } catch (error) {
-      console.error("Error deleting collection: ", error);
-    }
+      await deleteDoc(docRef);
 
-    setOpenDialog(false);
-    setSelectedCollection(null);
+      setCollections((prevCollections) =>
+        prevCollections.filter((collection) => collection.id !== selectedCollection.id)
+      );
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+    }
   };
+
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
 
   return (
     <Container maxWidth="lg">
@@ -111,8 +118,6 @@ export default function Flashcards() {
             </Button>
             <Box sx={{ flexGrow: 1 }} /> {/* Spacer */}
             <Box sx={{ display: "flex", gap: "16px" }}>
-              {" "}
-              {/* Flex container for buttons */}
               <Button color="inherit" onClick={handleBack}>
                 <Typography
                   variant="h6"
@@ -149,13 +154,13 @@ export default function Flashcards() {
             top: 100,
             width: "100%",
             height: "100%",
-            zIndex: 1, // Lower z-index for the background image
+            zIndex: 1,
             display: { xs: "none", md: "block" },
-            overflow: "hidden", // Ensure background image does not overflow
+            overflow: "hidden",
           }}
         ></Box>
         <Grid container spacing={3} sx={{ mt: 10, zIndex: 2 }}>
-          {flashcardCollections.map((collection, index) => (
+          {collections.map((collection, index) => (
             <Grid
               item
               xs={12}
