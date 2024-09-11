@@ -23,7 +23,7 @@ const formatAmountForStripe = (amount, currency) => {
               product_data: {
                 name: 'Pro subscription',
               },
-              unit_amount: formatAmountForStripe(10, 'usd'),
+              unit_amount: formatAmountForStripe(9.99, 'usd'),
               recurring: {
                 interval: 'month',
                 interval_count: 1,

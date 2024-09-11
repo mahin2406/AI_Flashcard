@@ -2,48 +2,44 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppBar, Container, Toolbar, Button, Typography, Grid, Card, CardActionArea, CardContent, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Box } from "@mui/material";
-import { useAuth } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { collection, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import RemoveCircleTwoToneIcon from "@mui/icons-material/RemoveCircleTwoTone";
 
-export default function FlashcardsPage() {
+export default function Flashcard() {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const router = useRouter();
-  const { userId } = useAuth(); // Get user ID from authentication service
+  const { user, isLoaded, isSignedIn } = useUser(); 
 
   useEffect(() => {
-    const fetchCollections = async () => {
+    async function getFlashcards() {
+      if (!isLoaded || !isSignedIn || !user) return;
+
       try {
-        if (!userId) {
-          console.error('User not authenticated');
-          return;
-        }
-
-        const userDocRef = doc(db, 'users', userId); // Get user document reference
-        const userSnap = await getDoc(userDocRef);
-
-        if (userSnap.exists()) {
-          const flashcardCollections = userSnap.data().flashcards || [];
-          setCollections(flashcardCollections);
+        const docRef = doc(db, 'users', user.id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const collections = docSnap.data().flashcards || [];
+          setCollections(collections);
         } else {
-          await setDoc(userDocRef, { flashcards: [] });
+          await setDoc(docRef, { flashcards: [] });
         }
       } catch (error) {
-        console.error('Error fetching flashcard collections:', error);
+        console.error("Error fetching flashcards:", error);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchCollections();
-  }, [userId]);
+    getFlashcards();
+  }, [user, isLoaded, isSignedIn]);
 
   const handleCardClick = (id) => {
-    router.push(`/flashcards/${id}`);
+    router.push(`/flashcard?id=${id}`);
   };
 
   const handleBack = () => {
@@ -70,9 +66,9 @@ export default function FlashcardsPage() {
   };
 
   const handleDeleteCollection = async () => {
-    if (!userId || !selectedCollection || !selectedCollection.id) return;
+    if (!user || !selectedCollection || !selectedCollection.id) return;
 
-    const userDocRef = doc(db, "users", userId);
+    const userDocRef = doc(db, "users", user.id);
     const collectionRef = collection(userDocRef, "flashcards");
     const docRef = doc(collectionRef, selectedCollection.id);
 
