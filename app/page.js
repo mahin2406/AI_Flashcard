@@ -166,7 +166,7 @@ export default function Home() {
                     Easy Text Input
                   </Typography>
                   <Typography>
-                    Enter text, and we'll generate flashcards effortlessly.
+                    Enter text, and we&apos;ll generate flashcards effortlessly.
                   </Typography>
                 </Paper>
               </Slide>
@@ -290,10 +290,10 @@ export default function Home() {
                       Pro Plan
                     </Typography>
                     <Typography variant="h5" gutterBottom>
-                      $10 / month
+                      $9.99/month
                     </Typography>
                     <Typography>
-                      Enjoy unlimited features and storage.
+                      Access all features and unlimited storage.
                     </Typography>
                     <Button
                       variant="contained"
@@ -315,23 +315,7 @@ export default function Home() {
             </Grid>
           </Box>
         </Container>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            p: 4,
-            backgroundColor: '#292929',
-            color: '#fff',
-            borderTop: '3px solid #ff7043',
-          }}
-        >
-          <Typography variant="body2" sx={{ color: '#ccc' }}>
-            © 2024 EasyLearning. All rights reserved.
-          </Typography>
-        </Box>
-      </Box> {/* Closing the main container Box */}
-
+      </Box>
     </>
-  ); // Ending the return of JSX
-} // Ending the Home component function
+  );
+}
