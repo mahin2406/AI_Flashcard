@@ -20,7 +20,7 @@ import { db } from "@/firebase";
 
 export default function Flashcard() {
   const { isLoaded, isSignedIn, user } = useUser();
-  const [collections, setCollections] = useState([]);
+  const [flashcards, setFlashcards] = useState([]);
   const [flipped, setFlipped] = useState([]);
 
   const searchParams = useSearchParams();
@@ -29,22 +29,27 @@ export default function Flashcard() {
 
   useEffect(() => {
     async function getFlashcard() {
-      if (!search || !user) return;
-  
+      if (!search || !user) {
+        alert("Please sign in to view flashcard");
+        return;
+      }
       const colRef = collection(doc(collection(db, 'users'), user.id), search);
+      console.log("col ref", colRef);
       const docs = await getDocs(colRef);
-      const flashcardsData = [];
-      docs.forEach((doc) => {
-        flashcardsData.push({ id: doc.id, ...doc.data() });
-      });
-  
-      console.log(flashcardsData); // Check what is fetched
-      setCollections(flashcardsData);
-    }
-    getFlashcard();
-  }, [search, user]);
-  
+      const flashcards = [];
+      console.log("docs", docs);
 
+      docs.forEach((doc) => {
+        flashcards.push({ id: doc.id, ...doc.data() });
+      });
+      console.log("flashcards", flashcards);
+
+      setFlashcards(flashcards);
+    }
+
+    getFlashcard();
+  }, [user, search]);
+  
   const handleCardClick = (id) => {
     setFlipped((prev) => ({
       ...prev,
@@ -131,7 +136,7 @@ export default function Flashcard() {
               {search}
             </Typography>
             <Grid container maxWidth="100vw" spacing={3} sx={{ mt: 4 }}>
-              {collections.map((flashcard, index) => (
+              {flashcards.map((flashcard, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Card>
                     <CardActionArea onClick={() => handleCardClick(index)}>
@@ -180,18 +185,6 @@ export default function Flashcard() {
                         >
                           <div>
                             <div>
-                              <Typography
-                                variant="subtitle1"
-                                component="div"
-                                sx={{
-                                  fontWeight: "bold",
-                                  textAlign: "center",
-                                  marginBottom: "8px",
-                                  fontFamily: "sans-serif",
-                                }}
-                              >
-                                {flashcard.topic}
-                              </Typography>
                               <Typography
                                 variant="h6"
                                 component="div"
