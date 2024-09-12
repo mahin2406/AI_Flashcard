@@ -15,12 +15,12 @@ import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { collection, doc, getDoc, setDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
 
 export default function Flashcard() {
   const { isLoaded, isSignedIn, user } = useUser();
-  const [flashcards, setFlashcards] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [flipped, setFlipped] = useState([]);
 
   const searchParams = useSearchParams();
@@ -29,32 +29,35 @@ export default function Flashcard() {
 
   useEffect(() => {
     async function getFlashcard() {
-      if (!search || !user) return
+      if (!search || !user) return;
   
-      const colRef = collection(doc(collection(db, 'users'), user.id), search)
-      const docs = await getDocs(colRef)
-      const flashcards = []
+      const colRef = collection(doc(collection(db, 'users'), user.id), search);
+      const docs = await getDocs(colRef);
+      const flashcardsData = [];
       docs.forEach((doc) => {
-        flashcards.push({ id: doc.id, ...doc.data() })
-      })
-      setFlashcards(flashcards)
+        flashcardsData.push({ id: doc.id, ...doc.data() });
+      });
+  
+      console.log(flashcardsData); // Check what is fetched
+      setCollections(flashcardsData);
     }
-    getFlashcard()
-  }, [search, user])
+    getFlashcard();
+  }, [search, user]);
+  
 
   const handleCardClick = (id) => {
     setFlipped((prev) => ({
       ...prev,
       [id]: !prev[id],
-    }))
-  }
+    }));
+  };
 
   const handleHome = () => {
-    router.push("./");
+    router.push(`/`);
   };
 
   const handleBack = () => {
-    router.push("./flashcards");
+    router.push(`/flashcards`);
   };
 
   if (!isLoaded || !isSignedIn) {
@@ -128,12 +131,10 @@ export default function Flashcard() {
               {search}
             </Typography>
             <Grid container maxWidth="100vw" spacing={3} sx={{ mt: 4 }}>
-              {flashcards.map((flashcard, index) => (
+              {collections.map((flashcard, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Card>
-                    <CardActionArea
-                      onClick={() => handleCardClick(index)}
-                    >
+                    <CardActionArea onClick={() => handleCardClick(index)}>
                       <CardContent>
                         <Box
                           sx={{
@@ -161,18 +162,18 @@ export default function Flashcard() {
                               borderRadius: "8px",
                               display: "flex",
                               flexDirection: "column",
-                              alignItems: "flex-start",
-                              justifyContent: "flex-start",
+                              alignItems: "center",
+                              justifyContent: "center", // Center text
                               padding: 2,
                               boxSizing: "border-box",
                               overflowY: "auto",
+                              textAlign: "center", // Ensure text is centered
                             },
                             "& > div > div:nth-child(2)": {
                               transform: "rotateY(180deg)",
                               backgroundColor: "#f5f5f5",
                               color: "black",
                               fontSize: "0.9rem",
-                              overflowY: "auto",
                               fontFamily: "serif",
                             },
                           }}
@@ -186,7 +187,7 @@ export default function Flashcard() {
                                   fontWeight: "bold",
                                   textAlign: "center",
                                   marginBottom: "8px",
-                                  fontFamily: "sans-sserif",
+                                  fontFamily: "sans-serif",
                                 }}
                               >
                                 {flashcard.topic}

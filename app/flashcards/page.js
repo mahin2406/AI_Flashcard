@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AppBar, Container, Toolbar, Button, Typography, Grid, Card, CardActionArea, CardContent, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Box } from "@mui/material";
+import { AppBar, Container, Toolbar, Button, Typography, Grid, Card, CardActionArea, CardContent, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Box, CircularProgress, Snackbar } from "@mui/material";
 import { useUser } from "@clerk/nextjs";
 import { collection, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebase";
@@ -12,8 +12,9 @@ export default function Flashcard() {
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
+  const [error, setError] = useState(null); // Error state
   const router = useRouter();
-  const { user, isLoaded, isSignedIn } = useUser(); 
+  const { user, isLoaded, isSignedIn } = useUser();
 
   useEffect(() => {
     async function getFlashcards() {
@@ -30,6 +31,7 @@ export default function Flashcard() {
         }
       } catch (error) {
         console.error("Error fetching flashcards:", error);
+        setError("Error loading collections"); // Set error
       } finally {
         setLoading(false);
       }
@@ -51,8 +53,8 @@ export default function Flashcard() {
   };
 
   const handleLogout = async () => {
-    await clerk.signOut(); // Sign out using Clerk
-    router.push(`/`); // Redirect to sign-in page after logout
+    await clerk.signOut(); 
+    router.replace(`/`); // Use replace instead of push
   };
 
   const handleOpenDialog = (collection) => {
@@ -67,14 +69,19 @@ export default function Flashcard() {
 
   const handleDeleteCollection = async () => {
     if (!user || !selectedCollection || !selectedCollection.id) return;
-
-    const userDocRef = doc(db, "users", user.id);
-    const collectionRef = collection(userDocRef, "flashcards");
-    const docRef = doc(collectionRef, selectedCollection.id);
-
+  
     try {
+      // Reference the user's document first
+      const userDocRef = doc(db, "users", user.id);
+      
+      // Then reference the flashcards subcollection and the specific flashcard document
+      const collectionRef = collection(userDocRef, "flashcards");
+      const docRef = doc(collectionRef, selectedCollection.id);
+  
+      // Delete the flashcard document
       await deleteDoc(docRef);
-
+  
+      // Update the state after deletion
       setCollections((prevCollections) =>
         prevCollections.filter((collection) => collection.id !== selectedCollection.id)
       );
@@ -83,9 +90,14 @@ export default function Flashcard() {
       console.error("Error deleting collection:", error);
     }
   };
+  
 
   if (loading) {
-    return <Typography>Loading...</Typography>;
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
@@ -112,7 +124,7 @@ export default function Flashcard() {
                 EasyLearning
               </Typography>
             </Button>
-            <Box sx={{ flexGrow: 1 }} /> {/* Spacer */}
+            <Box sx={{ flexGrow: 1 }} />
             <Box sx={{ display: "flex", gap: "16px" }}>
               <Button color="inherit" onClick={handleBack}>
                 <Typography
@@ -143,18 +155,7 @@ export default function Flashcard() {
             </Box>
           </Toolbar>
         </AppBar>
-        <Box
-          sx={{
-            position: "absolute",
-            left: 200,
-            top: 100,
-            width: "100%",
-            height: "100%",
-            zIndex: 1,
-            display: { xs: "none", md: "block" },
-            overflow: "hidden",
-          }}
-        ></Box>
+        
         <Grid container spacing={3} sx={{ mt: 10, zIndex: 2 }}>
           {collections.map((collection, index) => (
             <Grid
@@ -167,7 +168,8 @@ export default function Flashcard() {
             >
               <Card>
                 <CardActionArea
-                  onClick={() => handleCardClick(collection.id)}
+                  onClick={() => handleCardClick(collection.name)}
+                  sx={{ transition: "transform 0.2s", "&:hover": { transform: "scale(1.05)" } }}
                 >
                   <CardContent>
                     <Typography variant="h5" sx={{ textAlign: "center" }}>
@@ -215,6 +217,13 @@ export default function Flashcard() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+          message={error}
+        />
       </Box>
     </Container>
   );
