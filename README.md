@@ -1,6 +1,6 @@
 ## View Demo
 
-Here is the link : - https://ai-flashcard-opal.vercel.app/
+Here is the link : - 
 
 ## Getting Started
 
