@@ -68,28 +68,28 @@ export default function Flashcard() {
   };
 
   const handleDeleteCollection = async () => {
-    if (!user || !selectedCollection || !selectedCollection.id) return;
-  
+    if (!user || !selectedCollection) return;
+
+    const userDocRef = doc(collection(db, "users"), user.id);
+
     try {
-      // Reference the user's document first
-      const userDocRef = doc(db, "users", user.id);
-      
-      // Then reference the flashcards subcollection and the specific flashcard document
-      const collectionRef = collection(userDocRef, "flashcards");
-      const docRef = doc(collectionRef, selectedCollection.id);
-  
-      // Delete the flashcard document
-      await deleteDoc(docRef);
-  
-      // Update the state after deletion
-      setCollections((prevCollections) =>
-        prevCollections.filter((collection) => collection.id !== selectedCollection.id)
-      );
-      handleCloseDialog();
+      const docSnap = await getDoc(userDocRef);
+      if (docSnap.exists()) {
+        const collections = docSnap.data().flashcards || [];
+        const updatedCollections = collections.filter(
+          (collection) => collection.name !== selectedCollection.name
+        );
+        await setDoc(userDocRef, { flashcards: updatedCollections });
+        setFlashcardCollections(updatedCollections);
+      }
     } catch (error) {
-      console.error("Error deleting collection:", error);
+      console.error("Error deleting collection: ", error);
     }
+
+    setOpenDialog(false);
+    setSelectedCollection(null);
   };
+
   
 
   if (loading) {
